@@ -1,0 +1,33 @@
+apt-get install python3-vtk7
+pip install mayavi
+pip install PyQt5
+
+apt install libnvidia-gl-440
+
+pip install tensorboard
+pip install tensorboardX (old version)   // 지금은 tensorboard와 동일
+
+##### parse_velo.py 병렬 처리를 할 때 설치 #####
+pip install parmap
+##############################################
+
+
+pip install cupy-cuda110   // cupy, pypi 사이트에서 사용중인 Cuda 버전 확인 후 설치함
+
+
+#### EMD metric code ####
+Ref. https://github.com/Colin97/MSN-Point-Cloud-Completion/tree/master/emd
+--> 설치
+#########################
+
+
+
+
+
+참고 사이트 : https://stackoverflow.com/questions/61754702/setting-up-vtk-with-python3-8-and-ubuntu-20-04
+
+
+
+_____________________________________________________________________-
+참고 paper 
+"Compressing Sensor Data for Remote Assistance of Autonomous Vehicles using Deep Generative Models"
