@@ -4,15 +4,22 @@ import torch
 import sys
 
 import __init__
-# from emd import EMD
-sys.path.append("./emd/")
-import emd_module as emd
+
+# metric import
+from EMD.emd_module import emdModule as emd
+from Chamfer_distance.chamfer_distance import ChamferDistance
+
 from utils import * 
 from models import * 
-from kitti_data.data import PointCloudFolder
 import tqdm
 
-from networks.newcrf_layers import CRF_based_LSRNet
+# dataset loader
+sys.path.append(r'../kitti_data')
+from data import PointCloudFolder
+
+
+## model load
+
 
 '''
 Expect two arguments: 
@@ -158,4 +165,3 @@ with torch.no_grad():
         
         losses = torch.stack(losses).mean().item()
         print('{} with missing p {} : {:.4f}'.format(sys.argv[3], missing, losses))
-
