@@ -61,7 +61,8 @@
                 "--lr","0.0001",
                 "--use_selu","0",
                 "--autoencoder","0",
-                "--base_dir","./runs/default"
+                "--base_dir","../runs/Unet_rxyz_ep100_mae_x4Upsampling",
+                "--dataset_dir","../kitti_data_maxPadding/raw"
             ]
         }
     ]

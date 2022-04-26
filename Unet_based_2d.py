@@ -110,10 +110,10 @@ if args.debug:
 # dataset_val   = preprocess(dataset_val).astype('float32')
 
 train_loader  = torch.utils.data.DataLoader(dataset_train, batch_size= args.batch_size,
-                    shuffle=True, num_workers=0, drop_last=True)
+                    shuffle=True, num_workers=4, drop_last=True)
 
 val_loader    = torch.utils.data.DataLoader(dataset_val, batch_size= args.batch_size,
-                    shuffle=False, num_workers=0, drop_last=False)
+                    shuffle=False, num_workers=1, drop_last=False)
 
 print(model)
 optim = optimizor.Adam(model.parameters(), lr=args.lr) 
