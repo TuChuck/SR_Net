@@ -1,0 +1,68 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: training_CRF_based_2d",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--z_dim","128",
+                "--batch_size","16",
+                "--kl_warmup_epochs","200",
+                "--no_polar","1",
+                "--lr","0.0001",
+                "--use_selu","0",
+                "--autoencoder","0",
+                "--base_dir","./runs/default"
+            ]
+        },
+        {
+            "name": "Python: evaluation",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "runs/Unet_rxyz_ep100_mae_x4Upsampling","99","emd"
+            ]
+        },
+        {
+            "name": "Python: data_preprocessing",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--dir","kitti_data/raw/",
+                "--dataset","kitti",
+                "--write_dir","processed_data"
+            ]
+        },
+        {
+            "name": "Python: training_model",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--z_dim","128",
+                "--batch_size","32",
+                "--kl_warmup_epochs","200",
+                "--no_polar","1",
+                "--lr","0.0001",
+                "--use_selu","0",
+                "--autoencoder","0",
+                "--base_dir","./runs/default"
+            ]
+        }
+    ]
+}

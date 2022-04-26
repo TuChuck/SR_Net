@@ -183,7 +183,7 @@ class SalsaNext(nn.Module):
         self.Up_block = []
         for _ in range(upsampling_factor):
             if _ == 0:
-                self.Up_block.append(Upsampling(3, 32 , kernel_size=3, stride=(2,1)))
+                self.Up_block.append(Upsampling(nclasses, 32 , kernel_size=3, stride=(2,1)))
             else:
                 self.Up_block.append(Upsampling(32, 32 , kernel_size=3, stride=(2,1)))
         self.Up_block = nn.ModuleList(self.Up_block)

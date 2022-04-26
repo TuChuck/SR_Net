@@ -90,14 +90,14 @@ class Upsampling(nn.Module):
         return x0
 
 class Unet(nn.Module):
-    def __init__(self, filters, dropout_rate, upsampling_factor):
+    def __init__(self, imput_dim, filters, dropout_rate, upsampling_factor):
         super(Unet, self).__init__()
         self.upsampling_factor = upsampling_factor
         
         self.Up_block = []
         for _ in range(upsampling_factor):
             if _ == 0:
-                self.Up_block.append(Upsampling(3, filters , kernel_size=3, stride=(2,1)))
+                self.Up_block.append(Upsampling(imput_dim, filters , kernel_size=3, stride=(2,1)))
             else:
                 self.Up_block.append(Upsampling(filters, filters , kernel_size=3, stride=(2,1)))
         self.Up_block = nn.ModuleList(self.Up_block)
@@ -116,11 +116,11 @@ class Unet(nn.Module):
         self.decoder_block1 = Decoder_block(filters * 4, filters * 2,dropout_rate=dropout_rate)
 
         self.conv_block2 = ConvBlock(filters * 2, filters, kernel_size=3, padding=1)
-        self.conv1d = nn.Conv2d(filters,3, kernel_size=1)
+        self.conv1d = nn.Conv2d(filters,imput_dim, kernel_size=1)
 
         self.AvgPool = nn.AvgPool2d(kernel_size=2, padding=(1,0))
         self.Do = nn.Dropout(dropout_rate)
-        self.act = nn.ReLU()
+        self.act = nn.Sigmoid()
 
     def forward(self, x):
         x0 = x

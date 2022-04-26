@@ -316,6 +316,38 @@ def get_chamfer_dist(get_slow=False):
 
     return loss
 
+def cart2sph_torch(xyz):
+    x = xyz[:,0]
+    y = xyz[:,1]
+    z = xyz[:,2]
+
+    az = torch.unsqueeze(torch.atan2(y,x),dim=1)
+    xy2 = x**2 + y**2
+    elev = torch.unsqueeze(torch.atan2(z,torch.sqrt(xy2)),dim=1)
+    r = torch.unsqueeze(torch.sqrt(xy2 + z**2),dim=1)
+
+    return r, az, elev
+
+def sph2cart_torch(r, az, elev):
+    """
+    input parameter : r, az, elev
+    """
+
+    x = r * torch.cos(elev) * torch.cos(az)
+    y = r * torch.cos(elev) * torch.sin(az)
+    z = r * torch.sin(elev)
+
+    return torch.cat((x,y,z),dim=1)
+
+def input_dim_switch(representation):
+    dict_ = {"xyz":3,
+             "polar":2,
+             "range":1 ,
+             "rxyz":4 
+            }.get(representation, "represnetation error")
+
+    return dict_
+
 if __name__ == '__main__':
     import pdb; pdb.set_trace()
     # check if both chamfer implementations give the same results
