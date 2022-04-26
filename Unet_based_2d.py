@@ -1,8 +1,11 @@
+from ntpath import join
+import sys
+import os 
 import argparse
 import torch
 import torch.utils.data
 import torch.nn as nn
-import torch.optim as optim
+import torch.optim as optimizor
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 from pydoc import locate
@@ -11,16 +14,19 @@ import tensorboardX
 
 from utils import * 
 from models import * 
-from kitti_data.data import PointCloudFolder
+sys.path.append(r'../kitti_data')
+from data import PointCloudFolder
 
 ## model config
 from model_Unet import Unet, upsample
 from SalsaNext_upsampling import SalsaNext
 
+
 parser = argparse.ArgumentParser(description='VAE training of LiDAR')
 parser.add_argument('--batch_size',         type=int,   default=64,             help='size of minibatch used during training')
 parser.add_argument('--use_selu',           type=int,   default=0,              help='replaces batch_norm + act with SELU')
 parser.add_argument('--base_dir',           type=str,   default='runs/test',    help='root of experiment directory')
+parser.add_argument('--dataset_dir',        type=str,   default='../kitti_data/raw', help="path of dataset")
 parser.add_argument('--no_polar',           type=int,   default=0,              help='if True, the representation used is (X,Y,Z), instead of (D, Z), where D=sqrt(X^2+Y^2)')
 parser.add_argument('--lr',                 type=float, default=1e-3,           help='learning rate value')
 parser.add_argument('--z_dim',              type=int,   default=128,            help='size of the bottleneck dimension in the VAE, or the latent noise size in GAN')
@@ -55,18 +61,24 @@ torch.cuda.manual_seed_all(0)
 # model = NewCRF()
 # construct model and ship to GPU
 
-############################# Select Network ###############################
-#############################################################################
-#############################################################################
-# filters = 64
-# dropout_rate = 0.25
-# upsampling_factor = 2
+# 
+name_struct = args.base_dir.split('/')[2]
+assert len(name_struct.split('_')) == 5
+model_type, repre, epoch, loss_type, _ = name_struct.split('_')
 
-# model = Unet( filters=64, 
-#               dropout_rate=0.25,
-#               upsampling_factor = 2 ).cuda()
-#############################################################################
-model = SalsaNext(3, upsampling_factor=2).cuda()
+input_dim = input_dim_switch(repre)
+
+############################# Select Network ###############################
+if model_type == 'Salsa':
+    model = SalsaNext(nclasses = input_dim)
+elif model_type == 'Unet':
+    model = Unet(imput_dim=input_dim,
+                filters=64, 
+                dropout_rate=0.25,
+                upsampling_factor = 2)
+else:
+    raise ValueError
+model.cuda()
 #############################################################################
 #############################################################################
 
@@ -75,13 +87,16 @@ maybe_create_dir(os.path.join(args.base_dir, 'samples'))
 maybe_create_dir(os.path.join(args.base_dir, 'models'))
 writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.base_dir, 'TB'))
 writes = 0
-ns     = 8
+ns     = 80
 
 # dataset preprocessing
 print('loading data')
+dataset_path = args.dataset_dir
+# dataset_path = '../kitti_data/raw' 
+print('path of dataset is {}'.format(os.path.join(os.getcwd(),dataset_path)))
 
-dataset_train = PointCloudFolder('./kitti_data/raw', set='train', preprocess=preprocess)
-dataset_val = PointCloudFolder('./kitti_data/raw', set='val', preprocess=preprocess)
+dataset_train = PointCloudFolder(dataset_path, set='train', preprocess=preprocess)
+dataset_val = PointCloudFolder(dataset_path, set='val', preprocess=preprocess)
 
 # for item in train_loader:
 #     print(item[0].shape)
@@ -95,13 +110,13 @@ if args.debug:
 # dataset_val   = preprocess(dataset_val).astype('float32')
 
 train_loader  = torch.utils.data.DataLoader(dataset_train, batch_size= args.batch_size,
-                    shuffle=True, num_workers=4, drop_last=True)
+                    shuffle=True, num_workers=0, drop_last=True)
 
 val_loader    = torch.utils.data.DataLoader(dataset_val, batch_size= args.batch_size,
-                    shuffle=False, num_workers=1, drop_last=False)
+                    shuffle=False, num_workers=0, drop_last=False)
 
 print(model)
-optim = optim.Adam(model.parameters(), lr=args.lr) 
+optim = optimizor.Adam(model.parameters(), lr=args.lr) 
 
 # build loss function
 if args.atlas_baseline or args.panos_baseline:
@@ -126,10 +141,25 @@ for epoch in range(100): # range(50 if args.autoencoder else 100):
         img_inp = img[0].cuda()
         img_gt = img[1].cuda()
 
-        recon = model(process_input(img_inp))
+        if repre == 'xyz':
+            img_inp, img_gt = from_polar(img_inp), from_polar(img_gt)
+        elif repre == 'range':
+            img_inp,_,_ = cart2sph_torch(from_polar(img_inp))
+            img_gt, az_gt, elev_gt = cart2sph_torch(from_polar(img_gt))
+        elif repre == 'polar':
+            pass
+        elif repre == 'rxyz':
+            img_inp_r,_,_ = cart2sph_torch(from_polar(img_inp))
+            img_gt_r,_,_ = cart2sph_torch(from_polar(img_gt))
 
-        a = upsample(process_input(img_inp))
-        loss_recon = loss_fn(recon, process_input(img_gt))
+            img_inp = torch.cat((img_inp_r,from_polar(img_inp)),dim=1)
+            img_gt = torch.cat((img_gt_r,from_polar(img_gt)),dim=1)
+        else:
+            raise ValueError
+
+        recon = model(img_inp)
+
+        loss_recon = loss_fn(recon, img_gt)
 
         loss_    += [loss_recon.item()]
 
@@ -168,9 +198,25 @@ for epoch in range(100): # range(50 if args.autoencoder else 100):
                 img_inp = img[0].cuda()
                 img_gt = img[1].cuda()
 
-                recon = model(process_input(img_inp))
+                if repre == 'xyz':
+                    img_inp, img_gt = from_polar(img_inp), from_polar(img_gt)
+                elif repre == 'range':
+                    img_inp,_,_ = cart2sph_torch(from_polar(img_inp))
+                    img_gt, az_gt, elev_gt = cart2sph_torch(from_polar(img_gt))
+                elif repre == 'polar':
+                    pass
+                elif repre == 'rxyz':
+                    img_inp_r,_,_ = cart2sph_torch(from_polar(img_inp))
+                    img_gt_r,_,_ = cart2sph_torch(from_polar(img_gt))
+
+                    img_inp = torch.cat((img_inp_r,from_polar(img_inp)),dim=1)
+                    img_gt = torch.cat((img_gt_r,from_polar(img_gt)),dim=1)
+                else:
+                    raise ValueError
+
+                recon = model(img_inp)
            
-                loss_recon = loss_fn(recon, process_input(img_gt))
+                loss_recon = loss_fn(recon, img_gt)
 
                 loss_    += [loss_recon.item()]
 

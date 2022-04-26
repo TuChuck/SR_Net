@@ -85,7 +85,7 @@ with torch.no_grad():
     # dataset_test = preprocess(dataset_test).astype('float32')
 
     loader = (torch.utils.data.DataLoader(dataset_test, batch_size=size,
-                        shuffle=False, num_workers=4, drop_last=True))
+                        shuffle=False, num_workers=0, drop_last=True))
 
     loss_fn = loss()
 
