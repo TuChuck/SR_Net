@@ -30,7 +30,7 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "runs/Unet_rxyz_ep100_mae_x4Upsampling","99","emd"
+                "runs/include_zeros/Unet_xyz_ep100_mae_x4Upsampling","99","chamfer"
             ]
         },
         {

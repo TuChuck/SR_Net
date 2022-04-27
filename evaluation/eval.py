@@ -45,7 +45,7 @@ size = 5
 fast = True
 
 #
-name_struct = sys.argv[1].split('/')[1]
+name_struct = sys.argv[1].split('/')[2]
 assert len(name_struct.split('_')) == 5
 model_type, repre, epoch, loss_type, _ = name_struct.split('_')
 
@@ -85,7 +85,7 @@ with torch.no_grad():
     # dataset_test = preprocess(dataset_test).astype('float32')
 
     loader = (torch.utils.data.DataLoader(dataset_test, batch_size=size,
-                        shuffle=False, num_workers=0, drop_last=True))
+                        shuffle=False, num_workers=4, drop_last=True))
 
     loss_fn = loss()
 
@@ -160,8 +160,8 @@ with torch.no_grad():
                     gt_3d = from_polar(gt_tensor)
 
                 elif repre == 'rxyz':
-                    recon_3d = recon[:,:3]
-                    gt_3d = gt_tensor[:,:3]
+                    recon_3d = recon[:,1:]
+                    gt_3d = gt_tensor[:,1:]
                 else:
                     raise ValueError
 
