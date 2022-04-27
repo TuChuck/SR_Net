@@ -2,7 +2,6 @@
 # This file is covered by the LICENSE file in the root of this project.
 import imp
 
-import __init__ as booger
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

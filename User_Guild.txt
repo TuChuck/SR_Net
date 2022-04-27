@@ -7,6 +7,8 @@ apt install libnvidia-gl-440
 pip install tensorboard
 pip install tensorboardX (old version)   // 지금은 tensorboard와 동일
 
+pip install tqdm
+pip install timm
 ##### parse_velo.py 병렬 처리를 할 때 설치 #####
 pip install parmap
 ##############################################
